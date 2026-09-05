@@ -218,9 +218,155 @@
       }
     };
 
-    // 사용자 첫 터치/클릭 시 오디오 엔진 자동 활성화
-    window.addEventListener('click', () => soundEffects.init(), { once: true });
-    window.addEventListener('touchstart', () => soundEffects.init(), { once: true });
+    // 마음이 편안해지는 독서 집중 힐링 BGM 엔진 (Web Audio API 기반 독립 실행)
+    const bgmEngine = {
+      ctx: null,
+      isPlaying: false,
+      isMuted: false,
+      stepTimer: null,
+      gainNode: null,
+      filterNode: null,
+      delayNode: null,
+      feedbackGain: null,
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = soundEffects.ctx || new AudioContext();
+            soundEffects.ctx = this.ctx;
+          }
+        }
+        if (this.ctx && !this.gainNode) {
+          // BGM 마스터 볼륨 게인 (독서 집중에 방해되지 않는 은은하고 포근한 음량)
+          this.gainNode = this.ctx.createGain();
+          this.gainNode.gain.setValueAtTime(0.045, this.ctx.currentTime);
+
+          // 부드럽고 따뜻한 로우패스 필터
+          this.filterNode = this.ctx.createBiquadFilter();
+          this.filterNode.type = 'lowpass';
+          this.filterNode.frequency.setValueAtTime(1050, this.ctx.currentTime);
+
+          // 공간감을 더하는 앰비언트 에코 딜레이
+          this.delayNode = this.ctx.createDelay();
+          this.delayNode.delayTime.setValueAtTime(0.38, this.ctx.currentTime);
+
+          this.feedbackGain = this.ctx.createGain();
+          this.feedbackGain.gain.setValueAtTime(0.26, this.ctx.currentTime);
+
+          this.delayNode.connect(this.feedbackGain);
+          this.feedbackGain.connect(this.delayNode);
+
+          this.gainNode.connect(this.filterNode);
+          this.filterNode.connect(this.ctx.destination);
+          this.filterNode.connect(this.delayNode);
+          this.delayNode.connect(this.ctx.destination);
+        }
+      },
+
+      start() {
+        if (this.isPlaying || this.isMuted) return;
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        this.isPlaying = true;
+        this.playSequence();
+      },
+
+      stop() {
+        this.isPlaying = false;
+        if (this.stepTimer) {
+          clearTimeout(this.stepTimer);
+          this.stepTimer = null;
+        }
+      },
+
+      // 따뜻한 어쿠스틱 로즈/오르골 톤 단음 연주
+      playNote(freq, duration = 2.4, velocity = 0.04) {
+        if (!this.ctx || !this.isPlaying || this.isMuted) return;
+        try {
+          const now = this.ctx.currentTime;
+          
+          const osc1 = this.ctx.createOscillator();
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(freq, now);
+
+          const osc2 = this.ctx.createOscillator();
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(freq, now);
+
+          const noteGain = this.ctx.createGain();
+          noteGain.gain.setValueAtTime(0.0001, now);
+          noteGain.gain.linearRampToValueAtTime(velocity, now + 0.04);
+          noteGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+          osc1.connect(noteGain);
+          osc2.connect(noteGain);
+          noteGain.connect(this.gainNode);
+
+          osc1.start(now);
+          osc2.start(now);
+          osc1.stop(now + duration);
+          osc2.stop(now + duration);
+        } catch (e) {
+          console.log("Audio BGM note error", e);
+        }
+      },
+
+      // 마음이 차분해지는 4마디 독서 힐링 서스테인 코드 진행 (Fmaj7 -> G6 -> Em7 -> Am7)
+      playSequence() {
+        if (!this.isPlaying || this.isMuted) return;
+
+        const progression = [
+          // 1. Fmaj7 (평온하고 따스한 느낌)
+          { root: 174.61, notes: [261.63, 329.63, 392.00, 440.00, 523.25] },
+          // 2. G6 (맑고 차분하게 흐르는 느낌)
+          { root: 196.00, notes: [293.66, 329.63, 392.00, 493.88, 587.33] },
+          // 3. Em7 (깊이 생각에 잠기는 서정적 느낌)
+          { root: 164.81, notes: [246.94, 293.66, 329.63, 392.00, 493.88] },
+          // 4. Am7 (포근하고 편안한 마무리)
+          { root: 220.00, notes: [261.63, 329.63, 392.00, 440.00, 523.25] }
+        ];
+
+        let chordIdx = 0;
+        let noteStep = 0;
+
+        const loop = () => {
+          if (!this.isPlaying || this.isMuted) return;
+
+          const chord = progression[chordIdx];
+
+          // 마디 첫 박자에 은은한 베이스 루트음
+          if (noteStep === 0) {
+            this.playNote(chord.root, 3.2, 0.045);
+          }
+
+          // 아르페지오 멜로디 음
+          const currentNote = chord.notes[noteStep % chord.notes.length];
+          this.playNote(currentNote, 2.4, 0.032);
+
+          noteStep++;
+          if (noteStep >= 4) {
+            noteStep = 0;
+            chordIdx = (chordIdx + 1) % progression.length;
+          }
+
+          this.stepTimer = setTimeout(loop, 780);
+        };
+
+        loop();
+      }
+    };
+
+    // 사용자 첫 터치/클릭 시 오디오 엔진 및 편안한 BGM 자동 활성화
+    const handleFirstUserGesture = () => {
+      soundEffects.init();
+      bgmEngine.start();
+    };
+    window.addEventListener('click', handleFirstUserGesture, { once: true });
+    window.addEventListener('touchstart', handleFirstUserGesture, { once: true });
 
     // 지문 데이터베이스
     const LEVEL_ARTICLES = {
@@ -1172,7 +1318,22 @@
         const next = !isMuted;
         setIsMuted(next);
         soundEffects.muted = next;
+        bgmEngine.isMuted = next;
+        if (next) {
+          bgmEngine.stop();
+        } else {
+          bgmEngine.start();
+        }
       };
+
+      useEffect(() => {
+        // 앱 실행 시 편안한 힐링 독서 BGM 자동 재생 시도
+        if (!isMuted) {
+          try {
+            bgmEngine.start();
+          } catch (e) {}
+        }
+      }, []);
 
       // 폰트 크기 매핑 (모바일 스마트폰 화면 해상도를 자동 인식하여 비율에 맞게 유동적으로 스케일링)
       const fontClasses = {
@@ -1247,10 +1408,15 @@
                 <div class="flex items-center space-x-1.5 shrink-0 ml-2">
                   <button 
                     onClick={toggleSound}
-                    class="p-1.5 rounded-lg bg-emerald-900/80 hover:bg-emerald-900 text-emerald-100 border border-emerald-500/70 text-sm transition shadow-sm"
-                    title={isMuted ? "소리 켜기" : "소리 끄기"}
+                    class={`px-2.5 py-1 rounded-lg border text-xs sm:text-sm font-black transition shadow-xs flex items-center space-x-1 ${
+                      isMuted 
+                        ? "bg-emerald-950/80 text-emerald-300/60 border-emerald-700/50" 
+                        : "bg-emerald-900/90 text-amber-300 border-amber-400/80 shadow-emerald-950/40"
+                    }`}
+                    title={isMuted ? "배경음악 및 효과음 켜기" : "배경음악 및 효과음 끄기"}
                   >
-                    {isMuted ? "🔇" : "🔊"}
+                    <span class="text-sm">{isMuted ? "🔇" : "🎵"}</span>
+                    <span>{isMuted ? "BGM 끔" : "BGM"}</span>
                   </button>
                   <button 
                     onClick={() => setViewMode(viewMode === "mobile" ? "fullscreen" : "mobile")}
