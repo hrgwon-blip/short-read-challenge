@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>쇼츠 말고 숏글 | 고등학생 문해력 복원 챌린지</title>
+  
+  <!-- Pretendard Web Font -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Canvas Confetti CDN (폭죽 효과) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background: #0f172a;
+      color: #0f172a;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-6 bg-slate-950">
+
+  <div id="root" class="w-full max-w-4xl"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // 내장 기본 지문 데이터 (인터넷/API 키 없이도 바로 테스트 및 시연 가능)
+    const PRESET_ARTICLES = [
+      {
+        id: "article-1",
+        category: "통합사회 · 시사",
+        title: "기후위기와 탄소세: 지구를 살리는 공정한 가격표",
+        readingTimeSec: 30,
+        content: `화석연료를 태워 온실가스를 배출할 때 부과하는 세금을 '탄소세'라고 합니다. 탄소세의 근본적인 목적은 환경오염을 유발하는 제품의 가격을 높여 소비자가 친환경 대체재를 선택하도록 유도하는 것입니다. 그러나 일각에서는 탄소세가 소득이 적은 취약계층에게 더 큰 부담을 주는 '역진성'을 띨 수 있다고 우려합니다. 난방비나 전기요금처럼 일상생활에 필수적인 에너지 비용은 소득에 상관없이 지출해야 하기 때문입니다. 따라서 진정한 기후정의를 실현하려면 탄소세로 걷힌 재정을 저소득층의 친환경 에너지 전환 지원금으로 환급해 주는 제도적 보완이 반드시 함께 이루어져야 합니다.`,
+        keyVocabulary: ["탄소세", "역진성", "기후정의"],
+        quiz: [
+          {
+            level: 1,
+            type: "어휘력",
+            question: "지문에서 언급된 '역진성'의 의미로 가장 알맞은 것은?",
+            options: [
+              "소득이 적은 사람일수록 세금 부담 비율이 상대적으로 커지는 성질",
+              "오염물질 배출량이 많을수록 세금을 면제해 주는 정책",
+              "과거로 정책을 되돌려 경제 발전을 우선시하는 태도",
+              "친환경 기업에게만 일방적으로 보조금을 지급하는 현상"
+            ],
+            answer: 0,
+            hint: "본문 3번째 문장을 보세요: '소득이 적은 취약계층에게 더 큰 부담을 주는' 부분을 주목해 보세요!"
+          },
+          {
+            level: 2,
+            type: "핵심 요지",
+            question: "이 글의 중심 내용으로 가장 적절한 것은?",
+            options: [
+              "탄소세는 경제적 부작용이 크므로 전면 폐지되어야 한다.",
+              "탄소세의 실효성을 높이려면 저소득층을 위한 환급 등 보완책이 병행되어야 한다.",
+              "화석연료 가격을 낮춰 모든 국민의 에너지 지출 부담을 덜어주어야 한다.",
+              "온실가스 감축은 오직 기업의 자발적 기술 개발에만 맡겨야 한다."
+            ],
+            answer: 1,
+            hint: "마지막 문장의 결론을 확인해 보세요: '재정을 저소득층 지원금으로 환급해 주는 제도적 보완이 함께 이루어져야 합니다.'"
+          },
+          {
+            level: 3,
+            type: "비판적 추론",
+            question: "글쓴이의 관점에 부합하는 비판적 의견은?",
+            options: [
+              "환경 보호보다 당장의 기업 이윤 창출이 먼저다.",
+              "탄소세 세율을 무조건 높여 모든 에너지 소비를 줄여야 한다.",
+              "기후위기 대응 정책은 환경적 목표와 사회적 약자 배려가 균형을 이루어야 한다.",
+              "취약계층의 에너지 비용은 스스로 절약하여 해결해야 한다."
+            ],
+            answer: 2,
+            hint: "글쓴이가 강조한 '진정한 기후정의'는 환경을 지키면서 약자도 함께 보듬는 정책입니다."
+          }
+        ]
+      },
+      {
+        id: "article-2",
+        category: "통합과학 · 윤리",
+        title: "자율주행차와 트롤리 딜레마: 알고리즘은 누구를 구해야 하는가",
+        readingTimeSec: 30,
+        content: `완전자율주행차가 보편화될 미래에는 피할 수 없는 사고 순간에 차량의 컴퓨터가 누구를 먼저 보호할 것인가라는 '윤리적 알고리즘' 문제가 제기됩니다. 철학의 고전적 난제인 '트롤리 딜레마'처럼, 직진하면 다수의 보행자를 치고 핸들을 꺾으면 탑승자가 절벽으로 추락하는 상황이 발생할 수 있습니다. 탑승자의 안전만을 최우선시하도록 프로그래밍하면 도로 위의 보행자가 위험해지고, 반대로 공리주의적 관점에서 다수를 구하도록 설정하면 소비자들은 사고 시 자신을 희생시키는 차량을 구매하려 하지 않을 것입니다. 기술의 발전이 완벽한 안전을 담보하지 못하는 영역에서는 결국 인간 사회 전체가 합의한 도덕적 기준과 법적 가이드라인이 알고리즘 설계의 기초가 되어야 합니다.`,
+        keyVocabulary: ["트롤리 딜레마", "공리주의", "윤리적 알고리즘"],
+        quiz: [
+          {
+            level: 1,
+            type: "어휘력",
+            question: "지문에서 '공리주의적 관점'이 의미하는 바는?",
+            options: [
+              "개인의 절대적 권리와 사생활 보호를 최우선으로 삼는 태도",
+              "최대 다수의 최대 행복과 안전을 기준으로 가치를 판단하는 입장",
+              "모든 법률을 인공지능이 스스로 판단하게 만드는 원칙",
+              "비용을 최소화하여 경제적 이익만을 극대화하는 경영 방식"
+            ],
+            answer: 1,
+            hint: "'반대로 공리주의적 관점에서 다수를 구하도록 설정하면' 문장을 떠올려보세요!"
+          },
+          {
+            level: 2,
+            type: "핵심 요지",
+            question: "자율주행차의 사고 상황 알고리즘 설정이 어려운 근본 이유는?",
+            options: [
+              "차량 센서 기술이 아직 보행자를 감지하지 못하기 때문에",
+              "자율주행 차량의 판매 가격이 지나치게 비싸기 때문에",
+              "보행자 보호와 탑승자 보호라는 상충되는 윤리적 가치가 대립하기 때문에",
+              "모든 운전자가 법률 지식을 갖추지 못했기 때문에"
+            ],
+            answer: 2,
+            hint: "탑승자를 지킬지, 다수의 보행자를 지킬지 충돌하는 딜레마 상황을 짚어보세요."
+          },
+          {
+            level: 3,
+            type: "비판적 추론",
+            question: "글쓴이가 제시하는 이 문제의 바람직한 해결 방향은?",
+            options: [
+              "자율주행차 개발을 영구적으로 전면 중단한다.",
+              "제조사 임의대로 알고리즘을 비공개 설정하도록 둔다.",
+              "사회적 공론화를 거쳐 도덕적 기준과 법적 가이드라인을 합의해 알고리즘에 반영한다.",
+              "사고가 발생했을 때 탑승자에게만 모든 책임을 묻는다."
+            ],
+            answer: 2,
+            hint: "마지막 문장의 해법: '인간 사회 전체가 합의한 도덕적 기준과 법적 가이드라인이 기초가 되어야 한다'"
+          }
+        ]
+      },
+      {
+        id: "article-3",
+        category: "인문학 · 뇌과학",
+        title: "숏폼과 '팝콘 브레인': 디지털 디톡스로 뇌를 깨우다",
+        readingTimeSec: 30,
+        content: `1분 미만의 짧고 강렬한 자극을 주는 쇼츠와 릴스를 계속 시청할 때, 우리의 뇌에서는 도파민이 급격히 분비됩니다. 이러한 자극에 장시간 노출되면 뇌는 일상생활의 잔잔한 자극이나 긴 호흡의 독서에 흥미를 잃고 오직 팝콘처럼 톡톡 튀는 강력한 감각에만 반응하게 되는데, 이를 '팝콘 브레인' 현상이라고 부릅니다. 뇌신경 세포들은 사용하는 방식에 따라 스스로 구조를 재편하는 '뇌 가소성(Brain Plasticity)'을 지니고 있습니다. 즉, 숏폼에 길들여진 뇌라도 매일 5분씩 의도적으로 깊이 있는 텍스트를 정독하고 생각하는 시간을 가지면, 집중력과 깊은 사고를 담당하는 전두엽의 회로가 다시 강화될 수 있습니다.`,
+        keyVocabulary: ["팝콘 브레인", "도파민", "뇌 가소성"],
+        quiz: [
+          {
+            level: 1,
+            type: "어휘력",
+            question: "지문에서 말하는 '뇌 가소성'의 개념으로 가장 적절한 것은?",
+            options: [
+              "나이가 들면 뇌세포가 굳어져 영원히 변화하지 않는 성질",
+              "경험과 학습에 따라 뇌의 신경망 구조가 유연하게 변화하고 재구성되는 능력",
+              "강한 자극에만 뇌가 즉각적으로 중독되는 질환",
+              "디지털 기기를 사용할 때 뇌의 기억 용량이 무제한으로 확장되는 현상"
+            ],
+            answer: 1,
+            hint: "'뇌신경 세포들은 사용하는 방식에 따라 스스로 구조를 재편하는...' 부분을 확인해 보세요."
+          },
+          {
+            level: 2,
+            type: "핵심 요지",
+            question: "이 글이 궁극적으로 독자에게 전하고자 하는 메시지는?",
+            options: [
+              "숏폼 콘텐츠는 재미있으므로 시간제한 없이 즐겨도 무방하다.",
+              "한번 손상된 뇌의 집중력은 의학적으로 다시 회복하기 불가능하다.",
+              "규칙적인 정독 훈련을 통해 숏폼에 길들여진 집중력과 전두엽 기능을 회복할 수 있다.",
+              "인쇄 매체보다 스마트폰 화면으로 글을 읽는 것이 뇌 발달에 더 우수하다."
+            ],
+            answer: 2,
+            hint: "마지막 문장: '매일 의도적으로 깊이 있는 텍스트를 정독하면... 전두엽 회로가 다시 강화될 수 있습니다.'"
+          },
+          {
+            level: 3,
+            type: "비판적 추론",
+            question: "본문의 내용을 바탕으로 자신의 일상생활을 개선하려는 태도로 가장 적절한 것은?",
+            options: [
+              "스마트폰 알림을 켜두고 공부 중간중간 쇼츠를 본다.",
+              "하루 5분이라도 휴대폰을 내려놓고 사설이나 책을 온전히 읽는 시간을 갖는다.",
+              "글을 읽을 때 모르는 단어가 나와도 그냥 건너뛰며 빠르게 훑어본다.",
+              "단편적인 텍스트 요약본만 외우고 긴 본문은 읽지 않는다."
+            ],
+            answer: 1,
+            hint: "글쓴이가 권장하는 '의도적으로 깊이 읽고 생각하는 시간'을 실천하는 행동입니다."
+          }
+        ]
+      }
+    ];
+
+    function App() {
+      const [viewMode, setViewMode] = useState("mobile"); // "mobile" | "fullscreen"
+      const [articles, setArticles] = useState(PRESET_ARTICLES);
+      const [currentIndex, setCurrentIndex] = useState(0);
+      const [streak, setStreak] = useState(3);
+      const [timerSec, setTimerSec] = useState(0);
+      const [isTimerComplete, setIsTimerComplete] = useState(false);
+      const [fontSize, setFontSize] = useState("base");
+      
+      const [isQuizOpen, setIsQuizOpen] = useState(false);
+      const [currentQuizStep, setCurrentQuizStep] = useState(0);
+      const [selectedOption, setSelectedOption] = useState(null);
+      const [quizStatus, setQuizStatus] = useState("idle");
+      const [isCompletedToday, setIsCompletedToday] = useState(false);
+      const [showHintModal, setShowHintModal] = useState(false);
+
+      const [isApiModalOpen, setIsApiModalOpen] = useState(false);
+      const [apiKey, setApiKey] = useState("");
+      const [customTopic, setCustomTopic] = useState("");
+      const [isGenerating, setIsGenerating] = useState(false);
+
+      const currentArticle = articles[currentIndex];
+
+      useEffect(() => {
+        const savedStreak = localStorage.getItem("shortread_streak");
+        if (savedStreak) setStreak(parseInt(savedStreak, 10));
+        const savedKey = localStorage.getItem("gemini_api_key");
+        if (savedKey) setApiKey(savedKey);
+      }, []);
+
+      useEffect(() => {
+        let interval = null;
+        if (!isTimerComplete && !isCompletedToday) {
+          interval = setInterval(() => {
+            setTimerSec(prev => {
+              if (prev + 1 >= currentArticle.readingTimeSec) {
+                setIsTimerComplete(true);
+                clearInterval(interval);
+                return currentArticle.readingTimeSec;
+              }
+              return prev + 1;
+            });
+          }, 1000);
+        }
+        return () => clearInterval(interval);
+      }, [currentIndex, isTimerComplete, isCompletedToday]);
+
+      const handleSelectArticle = (index) => {
+        setCurrentIndex(index);
+        setTimerSec(0);
+        setIsTimerComplete(false);
+        setIsQuizOpen(false);
+        setCurrentQuizStep(0);
+        setSelectedOption(null);
+        setQuizStatus("idle");
+        setIsCompletedToday(false);
+      };
+
+      const handleAnswer = (optionIdx) => {
+        setSelectedOption(optionIdx);
+        const activeQuiz = currentArticle.quiz[currentQuizStep];
+
+        if (optionIdx === activeQuiz.answer) {
+          setQuizStatus("correct");
+          setTimeout(() => {
+            if (currentQuizStep + 1 < currentArticle.quiz.length) {
+              setCurrentQuizStep(prev => prev + 1);
+              setSelectedOption(null);
+              setQuizStatus("idle");
+            } else {
+              setIsQuizOpen(false);
+              setIsCompletedToday(true);
+              const newStreak = streak + 1;
+              setStreak(newStreak);
+              localStorage.setItem("shortread_streak", newStreak.toString());
+              triggerConfetti();
+            }
+          }, 1000);
+        } else {
+          setQuizStatus("wrong");
+          setShowHintModal(true);
+        }
+      };
+
+      const triggerConfetti = () => {
+        if (window.confetti) {
+          window.confetti({
+            particleCount: 120,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        }
+      };
+
+      const handleGenerateWithGemini = async () => {
+        if (!apiKey.trim()) {
+          alert("Google Gemini API 키를 입력해주세요. (무료 발급: aistudio.google.com)");
+          return;
+        }
+        if (!customTopic.trim()) {
+          alert("생성하고 싶은 지문의 주제를 입력해주세요.");
+          return;
+        }
+
+        setIsGenerating(true);
+        try {
+          const prompt = `너는 고등학교 1학년 교과/시사 전문 국어 선생님이야.
+학생들이 숏폼 중독에서 벗어나 문해력을 키울 수 있도록 다음 주제에 맞는 400자 내외 칼럼 지문 1개와 3단계 문해력 퀴즈 3문제를 만들어줘.
+주제: "${customTopic}"
+
+반드시 Markdown 코드 블록(예: \`\`\`json) 없이 오직 유효한 순수 JSON만 반환해:
+{
+  "category": "분야(예: 통합사회, 과학기술, 인문철학)",
+  "title": "흥미로운 제목",
+  "content": "400자 내외의 잘 쓰여진 본문",
+  "keyVocabulary": ["어휘1", "어휘2", "어휘3"],
+  "quiz": [
+    {
+      "level": 1,
+      "type": "어휘력",
+      "question": "핵심 어휘의 뜻을 묻는 질문",
+      "options": ["보기1", "보기2", "보기3", "보기4"],
+      "answer": 0,
+      "hint": "본문의 몇 번째 문장을 짚어주는 친절한 힌트"
+    },
+    {
+      "level": 2,
+      "type": "핵심 요지",
+      "question": "글의 중심 내용을 묻는 질문",
+      "options": ["보기1", "보기2", "보기3", "보기4"],
+      "answer": 1,
+      "hint": "글쓴이의 핵심 결론을 짚어주는 힌트"
+    },
+    {
+      "level": 3,
+      "type": "비판적 추론",
+      "question": "맥락을 추론하고 비판적으로 적용하는 질문",
+      "options": ["보기1", "보기2", "보기3", "보기4"],
+      "answer": 2,
+      "hint": "사회적 맥락과 연결 지어 생각해보도록 유도하는 힌트"
+    }
+  ]
+}`;
+
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json" }
+              })
+            }
+          );
+
+          const data = await response.json();
+          if (data.candidates && data.candidates[0].content.parts[0].text) {
+            const rawText = data.candidates[0].content.parts[0].text;
+            const parsed = JSON.parse(rawText);
+            const newArticle = {
+              id: `custom-${Date.now()}`,
+              category: parsed.category || "AI 실시간 생성",
+              title: parsed.title,
+              readingTimeSec: 30,
+              content: parsed.content,
+              keyVocabulary: parsed.keyVocabulary || ["핵심", "개념", "이해"],
+              quiz: parsed.quiz
+            };
+
+            setArticles([newArticle, ...articles]);
+            setCurrentIndex(0);
+            setIsApiModalOpen(false);
+            setCustomTopic("");
+            localStorage.setItem("gemini_api_key", apiKey);
+            handleSelectArticle(0);
+            alert("✨ AI가 새로운 맞춤 지문과 퀴즈를 완성했습니다!");
+          } else {
+            throw new Error("AI 응답 형식이 올바르지 않습니다.");
+          }
+        } catch (err) {
+          alert("Gemini 생성 중 오류가 발생했습니다: " + err.message);
+        } finally {
+          setIsGenerating(false);
+        }
+      };
+
+      const fontClasses = {
+        sm: "text-sm leading-relaxed",
+        base: "text-base leading-relaxed sm:text-lg sm:leading-8",
+        lg: "text-lg leading-loose sm:text-xl sm:leading-9"
+      };
+
+      const progressPercent = Math.min(100, Math.round((timerSec / currentArticle.readingTimeSec) * 100));
+
+      return (
+        <div class="flex flex-col items-center">
+          
+          {/* 상단 안내 바 */}
+          <div class="w-full max-w-md mb-3 flex items-center justify-between text-xs text-slate-400 px-2">
+            <div class="flex items-center space-x-1">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="font-medium text-slate-300">대전교육정보원 AI 창작 챌린지 출품작</span>
+            </div>
+            <div class="flex space-x-2">
+              <button 
+                onClick={() => setViewMode(viewMode === "mobile" ? "fullscreen" : "mobile")}
+                class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
+              >
+                {viewMode === "mobile" ? "🖥️ 넓은 화면" : "📱 모바일 뷰"}
+              </button>
+              <button 
+                onClick={() => setIsApiModalOpen(true)}
+                class="px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-medium transition shadow-sm flex items-center space-x-1"
+              >
+                <span>✨ AI 생성</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 앱 프레임 */}
+          <div class={`w-full bg-white transition-all duration-300 ${
+            viewMode === "mobile" 
+              ? "max-w-md rounded-[38px] shadow-2xl border-[8px] border-slate-800 overflow-hidden relative" 
+              : "max-w-3xl rounded-2xl shadow-xl border border-slate-700"
+          }`}>
+            
+            {viewMode === "mobile" && (
+              <div class="w-full bg-slate-900 text-slate-300 px-6 py-2 flex items-center justify-between text-xs font-semibold select-none">
+                <span>09:41</span>
+                <div class="w-20 h-4 bg-black rounded-full mx-auto"></div>
+                <div class="flex items-center space-x-1.5">
+                  <span>5G</span>
+                  <span>100%</span>
+                </div>
+              </div>
+            )}
+
+            {/* 헤더 */}
+            <div class="bg-gradient-to-r from-violet-600 to-indigo-600 text-white p-4 sm:p-5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="bg-white/20 text-white text-[11px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
+                      고1 문해력 복원
+                    </span>
+                    <span class="text-xs text-violet-200">Shorts to Short-Read</span>
+                  </div>
+                  <h1 class="text-xl font-extrabold tracking-tight mt-1 flex items-center space-x-1.5">
+                    <span>쇼츠 말고 숏글</span>
+                    <span class="text-[11px] bg-amber-400 text-amber-950 font-bold px-1.5 py-0.5 rounded ml-1">AI Challenge</span>
+                  </h1>
+                </div>
+
+                {/* 스트릭 배지 */}
+                <div class="flex flex-col items-end">
+                  <div class="flex items-center bg-white/15 px-3 py-1.5 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner">
+                    <span class="text-xl mr-1">🔥</span>
+                    <div>
+                      <div class="text-[10px] text-violet-200 font-medium leading-none">연속 달성</div>
+                      <div class="text-sm font-black text-amber-300 leading-tight">{streak}일째 성공!</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 지문 탭 목록 */}
+              <div class="flex items-center space-x-2 mt-4 overflow-x-auto pb-1 text-xs">
+                {articles.map((item, idx) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSelectArticle(idx)}
+                    class={`whitespace-nowrap px-3 py-1.5 rounded-xl font-medium transition ${
+                      currentIndex === idx
+                        ? "bg-white text-violet-700 shadow-md font-bold"
+                        : "bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    #{idx + 1} {item.category.split("·")[0].trim()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 본문 카드 */}
+            <div class="p-5 sm:p-6 bg-slate-50 flex flex-col justify-between min-h-[480px]">
+              <div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                  <span class="text-xs font-semibold text-violet-600 bg-violet-100 px-2 py-0.5 rounded-md">
+                    {currentArticle.category}
+                  </span>
+                  
+                  <div class="flex items-center space-x-1 bg-white border border-slate-200 rounded-lg p-0.5">
+                    <button 
+                      onClick={() => setFontSize("sm")}
+                      class={`px-2 py-0.5 text-xs rounded font-medium ${fontSize === "sm" ? "bg-violet-600 text-white" : "text-slate-500 hover:text-slate-800"}`}
+                    >
+                      가-
+                    </button>
+                    <button 
+                      onClick={() => setFontSize("base")}
+                      class={`px-2 py-0.5 text-xs rounded font-medium ${fontSize === "base" ? "bg-violet-600 text-white" : "text-slate-500 hover:text-slate-800"}`}
+                    >
+                      보통
+                    </button>
+                    <button 
+                      onClick={() => setFontSize("lg")}
+                      class={`px-2 py-0.5 text-xs rounded font-medium ${fontSize === "lg" ? "bg-violet-600 text-white" : "text-slate-500 hover:text-slate-800"}`}
+                    >
+                      가+
+                    </button>
+                  </div>
+                </div>
+
+                <h2 class="text-lg sm:text-xl font-bold text-slate-900 mt-3.5 tracking-tight">
+                  {currentArticle.title}
+                </h2>
+
+                <div class="flex items-center space-x-1.5 mt-2 mb-3">
+                  <span class="text-[11px] font-semibold text-slate-400">오늘의 핵심 어휘:</span>
+                  {currentArticle.keyVocabulary.map((word, i) => (
+                    <span key={i} class="text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60 px-2 py-0.5 rounded-md">
+                      {word}
+                    </span>
+                  ))}
+                </div>
+
+                <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 text-slate-800 text-justify">
+                  <p class={fontClasses[fontSize]}>
+                    {currentArticle.content}
+                  </p>
+                </div>
+              </div>
+
+              {/* 하단 타이머 & 액션 */}
+              <div class="mt-6 pt-4 border-t border-slate-200">
+                <div class="mb-3">
+                  <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1.5">
+                    <span class="flex items-center space-x-1">
+                      <span>⏱️ 뇌 집중 정독 타이머</span>
+                      {isTimerComplete && <span class="text-emerald-600 font-bold">(정독 완료!)</span>}
+                    </span>
+                    <span class={isTimerComplete ? "text-emerald-600 font-bold" : "text-violet-600 font-bold"}>
+                      {timerSec}s / {currentArticle.readingTimeSec}s
+                    </span>
+                  </div>
+                  <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                    <div 
+                      class={`h-full transition-all duration-1000 ${
+                        isTimerComplete ? "bg-emerald-500" : "bg-gradient-to-r from-violet-500 to-indigo-500"
+                      }`}
+                      style={{ width: `${progressPercent}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {isCompletedToday ? (
+                  <div class="w-full py-3.5 px-4 bg-emerald-50 border border-emerald-300 rounded-2xl flex items-center justify-between text-emerald-800">
+                    <div class="flex items-center space-x-2">
+                      <span class="text-xl">🏆</span>
+                      <span class="font-bold text-sm">오늘의 문해력 챌린지 성공!</span>
+                    </div>
+                    <button
+                      onClick={triggerConfetti}
+                      class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition"
+                    >
+                      폭죽 발사 🎉
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    disabled={!isTimerComplete}
+                    onClick={() => {
+                      setIsQuizOpen(true);
+                      setCurrentQuizStep(0);
+                      setSelectedOption(null);
+                      setQuizStatus("idle");
+                    }}
+                    class={`w-full py-4 rounded-2xl font-bold text-base shadow-md transition-all flex items-center justify-center space-x-2 ${
+                      isTimerComplete
+                        ? "bg-violet-600 hover:bg-violet-700 text-white cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+                        : "bg-slate-300 text-slate-500 cursor-not-allowed"
+                    }`}
+                  >
+                    {isTimerComplete ? (
+                      <>
+                        <span>🚀 3단계 문해력 퀴즈 풀기</span>
+                        <span class="bg-white/20 text-xs px-2 py-0.5 rounded-full">도전하기</span>
+                      </>
+                    ) : (
+                      <span>🔒 지문을 정독해주세요 ({currentArticle.readingTimeSec - timerSec}초 남음)</span>
+                    )}
+                  </button>
+                )}
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* 퀴즈 모달 */}
+          {isQuizOpen && (
+            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+                
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div class="flex items-center space-x-2">
+                    <span class="bg-violet-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg">
+                      {currentQuizStep + 1}단계 / 3문제
+                    </span>
+                    <span class="text-xs font-bold text-slate-500">
+                      [{currentArticle.quiz[currentQuizStep].type}]
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => setIsQuizOpen(false)}
+                    class="text-slate-400 hover:text-slate-600 text-lg font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <h3 class="text-base sm:text-lg font-bold text-slate-900 mt-4 mb-5">
+                  Q{currentQuizStep + 1}. {currentArticle.quiz[currentQuizStep].question}
+                </h3>
+
+                <div class="space-y-2.5">
+                  {currentArticle.quiz[currentQuizStep].options.map((opt, oIdx) => {
+                    const isSelected = selectedOption === oIdx;
+                    let btnClass = "border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800";
+
+                    if (isSelected) {
+                      if (quizStatus === "correct") {
+                        btnClass = "border-emerald-500 bg-emerald-50 text-emerald-900 font-bold ring-2 ring-emerald-400";
+                      } else if (quizStatus === "wrong") {
+                        btnClass = "border-rose-500 bg-rose-50 text-rose-900 font-bold ring-2 ring-rose-400";
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={oIdx}
+                        disabled={quizStatus === "correct"}
+                        onClick={() => handleAnswer(oIdx)}
+                        class={`w-full text-left p-3.5 rounded-xl border text-sm transition-all flex items-start space-x-2.5 ${btnClass}`}
+                      >
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-xs font-bold shrink-0 mt-0.5">
+                          {oIdx + 1}
+                        </span>
+                        <span>{opt}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div class="mt-4 pt-3 text-center">
+                  {quizStatus === "correct" && (
+                    <div class="text-emerald-600 font-bold text-sm flex items-center justify-center space-x-1 animate-bounce">
+                      <span>🎉 정답입니다! 다음 단계로 넘어갑니다...</span>
+                    </div>
+                  )}
+                  {quizStatus === "wrong" && (
+                    <div class="text-rose-600 font-semibold text-xs">
+                      아쉬워요! 다시 확인해볼까요? AI 튜터 힌트를 확인하세요.
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* 1:1 AI 국어 튜터 힌트 모달 */}
+          {showHintModal && (
+            <div class="fixed inset-0 bg-black/50 z-60 flex items-center justify-center p-4">
+              <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl border-2 border-amber-300">
+                <div class="flex items-center space-x-2 text-amber-600 font-bold mb-2">
+                  <span class="text-2xl">👩‍🏫</span>
+                  <span>1:1 AI 국어 선생님 힌트</span>
+                </div>
+                <p class="text-sm text-slate-700 bg-amber-50 p-3 rounded-xl border border-amber-200 leading-relaxed">
+                  {currentArticle.quiz[currentQuizStep].hint}
+                </p>
+                <button
+                  onClick={() => setShowHintModal(false)}
+                  class="w-full mt-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm transition"
+                >
+                  다시 풀어보기
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Gemini AI 실시간 생성 모달 */}
+          {isApiModalOpen && (
+            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-violet-600 text-xl font-bold">✨</span>
+                    <h3 class="font-bold text-slate-900 text-base">Gemini AI 실시간 지문 생성</h3>
+                  </div>
+                  <button onClick={() => setIsApiModalOpen(false)} class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+
+                <div class="mt-4 space-y-4">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">
+                      Google Gemini API Key (무료)
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="AIzaSy... 키를 입력하세요"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      class="w-full text-xs p-2.5 border rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-violet-500 outline-none"
+                    />
+                    <span class="text-[11px] text-slate-400 mt-1 block">
+                      * 키가 없어도 기본 내장 3종 지문으로 공모전 시연이 완벽히 가능합니다.
+                    </span>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">
+                      생성하고 싶은 칼럼 주제
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="예: 우주 탐사, 청소년 스마트폰 수면권, 인공지능 저작권"
+                      value={customTopic}
+                      onChange={(e) => setCustomTopic(e.target.value)}
+                      class="w-full text-xs p-2.5 border rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-violet-500 outline-none"
+                    />
+                  </div>
+
+                  <button
+                    disabled={isGenerating}
+                    onClick={handleGenerateWithGemini}
+                    class="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl text-sm transition shadow-md flex items-center justify-center space-x-2"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <span class="animate-spin">⏳</span>
+                        <span>AI가 지문과 3단계 퀴즈를 생성 중...</span>
+                      </>
+                    ) : (
+                      <span>생성하여 챌린지 시작하기 🚀</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
