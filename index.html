@@ -84,6 +84,14 @@
       line-height: 1.62;
     }
 
+    /* 독서 유도 페이서(형광펜 / 읽기 순서 안내 가이드): 줄바꿈 시에도 각 줄마다 부드럽게 배경 유지 */
+    .reading-highlight {
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      border-radius: 3px;
+      padding: 1px 1px;
+    }
+
     /* 부드러운 화면 전환 애니메이션 */
     @keyframes contentFadeIn {
       from {
@@ -115,7 +123,7 @@
   <div id="root" class="w-full min-h-screen max-w-4xl flex flex-col items-center justify-start p-0"></div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef, useMemo } = React;
 
     // Web Audio API 사운드 및 모바일 햅틱 진동 효과음
     const soundEffects = {
@@ -847,7 +855,22 @@
         buttonBorder: "border-rose-300",
         buttonBg: "bg-rose-50/80",
         tagClass: "bg-rose-100 text-rose-950 border-rose-300",
-        titleUnderline: "border-rose-500"
+        titleUnderline: "border-rose-500",
+        bgGradient: "from-rose-50/60 via-slate-50 to-white",
+        navBorder: "border-rose-200",
+        navSubBar: "bg-rose-100/90 border-b-2 border-rose-800",
+        backBtn: "bg-white text-rose-950 border border-rose-300 hover:bg-rose-50",
+        headingColor: "text-rose-950",
+        badgeNumber: "bg-rose-600 text-white",
+        cardBorderHover: "hover:border-rose-400 hover:bg-rose-50/50",
+        titleHover: "group-hover:text-rose-800",
+        highlightClass: "bg-rose-200/90 text-rose-950",
+        primaryBtn: "bg-rose-600 hover:bg-rose-700 ring-rose-300",
+        timerBadge: "bg-rose-100 text-rose-950 border-rose-300",
+        activeFontBtn: "bg-rose-700 text-white",
+        inactiveFontBtn: "text-rose-950 hover:bg-rose-100",
+        readingBorder: "border-rose-200",
+        fontBoxBorder: "border-rose-300"
       },
       "중등": {
         cardStyle: { backgroundColor: "#e0f2fe", borderColor: "#7dd3fc" },
@@ -856,7 +879,22 @@
         buttonBorder: "border-sky-300",
         buttonBg: "bg-sky-50/80",
         tagClass: "bg-sky-200/80 text-sky-950 border-sky-400",
-        titleUnderline: "border-sky-600"
+        titleUnderline: "border-sky-600",
+        bgGradient: "from-sky-50/60 via-slate-50 to-white",
+        navBorder: "border-sky-200",
+        navSubBar: "bg-sky-100/90 border-b-2 border-sky-800",
+        backBtn: "bg-white text-sky-950 border border-sky-300 hover:bg-sky-50",
+        headingColor: "text-sky-950",
+        badgeNumber: "bg-sky-600 text-white",
+        cardBorderHover: "hover:border-sky-400 hover:bg-sky-50/50",
+        titleHover: "group-hover:text-sky-800",
+        highlightClass: "bg-sky-200/90 text-sky-950",
+        primaryBtn: "bg-sky-600 hover:bg-sky-700 ring-sky-300",
+        timerBadge: "bg-sky-100 text-sky-950 border-sky-300",
+        activeFontBtn: "bg-sky-700 text-white",
+        inactiveFontBtn: "text-sky-950 hover:bg-sky-100",
+        readingBorder: "border-sky-200",
+        fontBoxBorder: "border-sky-300"
       },
       "고등": {
         cardStyle: { backgroundColor: "#ede9fe", borderColor: "#c4b5fd" },
@@ -865,7 +903,22 @@
         buttonBorder: "border-violet-300",
         buttonBg: "bg-violet-50/80",
         tagClass: "bg-violet-200/80 text-violet-950 border-violet-400",
-        titleUnderline: "border-violet-600"
+        titleUnderline: "border-violet-600",
+        bgGradient: "from-violet-50/60 via-slate-50 to-white",
+        navBorder: "border-violet-200",
+        navSubBar: "bg-violet-100/90 border-b-2 border-violet-800",
+        backBtn: "bg-white text-violet-950 border border-violet-300 hover:bg-violet-50",
+        headingColor: "text-violet-950",
+        badgeNumber: "bg-violet-600 text-white",
+        cardBorderHover: "hover:border-violet-400 hover:bg-violet-50/50",
+        titleHover: "group-hover:text-violet-800",
+        highlightClass: "bg-violet-200/90 text-violet-950",
+        primaryBtn: "bg-violet-600 hover:bg-violet-700 ring-violet-300",
+        timerBadge: "bg-violet-100 text-violet-950 border-violet-300",
+        activeFontBtn: "bg-violet-700 text-white",
+        inactiveFontBtn: "text-violet-950 hover:bg-violet-100",
+        readingBorder: "border-violet-200",
+        fontBoxBorder: "border-violet-300"
       },
       "성인": {
         cardStyle: { backgroundColor: "#ffedd5", borderColor: "#fdba74" },
@@ -874,13 +927,69 @@
         buttonBorder: "border-orange-300",
         buttonBg: "bg-orange-50/80",
         tagClass: "bg-orange-200/80 text-orange-950 border-orange-400",
-        titleUnderline: "border-orange-600"
+        titleUnderline: "border-orange-600",
+        bgGradient: "from-amber-50/60 via-slate-50 to-white",
+        navBorder: "border-amber-200",
+        navSubBar: "bg-amber-100/90 border-b-2 border-amber-800",
+        backBtn: "bg-white text-amber-950 border border-amber-300 hover:bg-amber-50",
+        headingColor: "text-amber-950",
+        badgeNumber: "bg-amber-600 text-white",
+        cardBorderHover: "hover:border-amber-400 hover:bg-amber-50/50",
+        titleHover: "group-hover:text-amber-800",
+        highlightClass: "bg-amber-200/90 text-amber-950",
+        primaryBtn: "bg-amber-600 hover:bg-amber-700 ring-amber-300",
+        timerBadge: "bg-amber-100 text-amber-950 border-amber-300",
+        activeFontBtn: "bg-amber-700 text-white",
+        inactiveFontBtn: "text-amber-950 hover:bg-amber-100",
+        readingBorder: "border-amber-200",
+        fontBoxBorder: "border-amber-300"
       }
     };
 
+    // 4단계 학습 레벨 카드 정의 (메인 홈 화면용)
+    const LEVEL_CARDS = [
+      {
+        key: "초등",
+        icon: "🌱",
+        title: "초등학생",
+        timeLabel: "(15초 정독)",
+        accentBg: "bg-rose-50 hover:bg-rose-100 active:bg-rose-200",
+        accentBorder: "border-rose-300",
+        textColor: "text-rose-950"
+      },
+      {
+        key: "중등",
+        icon: "🌿",
+        title: "중학생",
+        timeLabel: "(25초 정독)",
+        accentBg: "bg-sky-50 hover:bg-sky-100 active:bg-sky-200",
+        accentBorder: "border-sky-300",
+        textColor: "text-sky-950"
+      },
+      {
+        key: "고등",
+        icon: "🌳",
+        title: "고등학생",
+        timeLabel: "(30초 정독)",
+        accentBg: "bg-violet-50 hover:bg-violet-100 active:bg-violet-200",
+        accentBorder: "border-violet-300",
+        textColor: "text-violet-950"
+      },
+      {
+        key: "성인",
+        icon: "🎓",
+        title: "성인",
+        timeLabel: "(35초 정독)",
+        accentBg: "bg-amber-50 hover:bg-amber-100 active:bg-amber-200",
+        accentBorder: "border-amber-300",
+        textColor: "text-amber-950"
+      }
+    ];
+
     function App() {
+      // 3단계 화면 네비게이션: 'home' (메인 홈) -> 'article_select' (지문 선택) -> 'reading' (정독 및 퀴즈)
+      const [currentScreen, setCurrentScreen] = useState("home");
       const [viewMode, setViewMode] = useState("mobile");
-      const [isFullscreen, setIsFullscreen] = useState(false);
       const [isMuted, setIsMuted] = useState(false);
       
       const [selectedLevel, setSelectedLevel] = useState("고등");
@@ -888,8 +997,13 @@
       const [switchKey, setSwitchKey] = useState(0);
 
       const [timerSec, setTimerSec] = useState(0);
+      const [elapsedMs, setElapsedMs] = useState(0);
+      const [isTimerStarted, setIsTimerStarted] = useState(false);
       const [isTimerComplete, setIsTimerComplete] = useState(false);
       const [fontSize, setFontSize] = useState("base");
+
+      const startTimeRef = useRef(0);
+      const lastTickSecRef = useRef(-1);
 
       const [isQuizOpen, setIsQuizOpen] = useState(false);
       const [currentQuizStep, setCurrentQuizStep] = useState(0);
@@ -897,48 +1011,110 @@
       const [quizStatus, setQuizStatus] = useState("idle");
       const [isCompletedToday, setIsCompletedToday] = useState(false);
       const [showHintModal, setShowHintModal] = useState(false);
+      const [showChallengeBox, setShowChallengeBox] = useState(true);
 
       const currentArticle = LEVEL_ARTICLES[selectedLevel][articleIdx];
       const currentTheme = LEVEL_THEMES[selectedLevel] || LEVEL_THEMES["고등"];
 
       useEffect(() => {
         let interval = null;
-        if (!isTimerComplete && !isCompletedToday) {
+        if (currentScreen === "reading" && isTimerStarted && !isTimerComplete && !isCompletedToday) {
+          const totalMs = currentArticle.readingTimeSec * 1000;
+          if (!startTimeRef.current) {
+            startTimeRef.current = Date.now() - elapsedMs;
+          }
+
           interval = setInterval(() => {
-            setTimerSec(prev => {
-              const nextSec = prev + 1;
-              const remaining = currentArticle.readingTimeSec - nextSec;
+            const now = Date.now();
+            const currentElapsed = Math.min(totalMs, now - startTimeRef.current);
+            setElapsedMs(currentElapsed);
+            
+            const currentSec = Math.floor(currentElapsed / 1000);
+            setTimerSec(currentSec);
 
-              // 5초 남았을 때 매 1초마다 모바일 진동 & 톤 알림음 발생
-              if (remaining <= 5 && remaining > 0) {
-                soundEffects.countdownTick(remaining);
-              }
+            const remainingSec = Math.max(0, currentArticle.readingTimeSec - currentSec);
 
-              if (nextSec >= currentArticle.readingTimeSec) {
-                setIsTimerComplete(true);
-                soundEffects.timerDone();
-                clearInterval(interval);
-                return currentArticle.readingTimeSec;
-              }
-              return nextSec;
-            });
-          }, 1000);
+            // 5초 남았을 때 매 1초마다 모바일 진동 & 톤 알림음 발생
+            if (remainingSec <= 5 && remainingSec > 0 && remainingSec !== lastTickSecRef.current) {
+              lastTickSecRef.current = remainingSec;
+              soundEffects.countdownTick(remainingSec);
+            }
+
+            if (currentElapsed >= totalMs) {
+              setIsTimerComplete(true);
+              setShowChallengeBox(true);
+              soundEffects.timerDone();
+              clearInterval(interval);
+            }
+          }, 40);
         }
         return () => clearInterval(interval);
-      }, [selectedLevel, articleIdx, isTimerComplete, isCompletedToday]);
+      }, [currentScreen, isTimerStarted, isTimerComplete, isCompletedToday, currentArticle.readingTimeSec]);
 
-      const handleSelectLevelOrArticle = (level, idx) => {
+      const handleSelectLevel = (lvl) => {
         soundEffects.click();
-        setSelectedLevel(level);
+        setSelectedLevel(lvl);
+        setCurrentScreen("article_select");
+      };
+
+      const handleSelectArticle = (idx) => {
+        soundEffects.click();
         setArticleIdx(idx);
         setTimerSec(0);
+        setElapsedMs(0);
+        startTimeRef.current = 0;
+        lastTickSecRef.current = -1;
+        setIsTimerStarted(false);
         setIsTimerComplete(false);
+        setShowChallengeBox(true);
         setIsQuizOpen(false);
         setCurrentQuizStep(0);
         setSelectedOption(null);
         setQuizStatus("idle");
         setIsCompletedToday(false);
         setSwitchKey(prev => prev + 1);
+        setCurrentScreen("reading");
+      };
+
+      const handleStartTimer = () => {
+        soundEffects.click();
+        startTimeRef.current = Date.now();
+        setElapsedMs(0);
+        setTimerSec(0);
+        lastTickSecRef.current = -1;
+        setIsTimerComplete(false);
+        setIsTimerStarted(true);
+      };
+
+      const handleRestartTimer = () => {
+        soundEffects.click();
+        startTimeRef.current = Date.now();
+        setElapsedMs(0);
+        setTimerSec(0);
+        lastTickSecRef.current = -1;
+        setIsTimerComplete(false);
+        setShowChallengeBox(true);
+        setIsTimerStarted(true);
+      };
+
+      const handleGoBackToHome = () => {
+        soundEffects.click();
+        setIsTimerStarted(false);
+        setIsTimerComplete(false);
+        startTimeRef.current = 0;
+        setElapsedMs(0);
+        setTimerSec(0);
+        setCurrentScreen("home");
+      };
+
+      const handleGoBackToArticles = () => {
+        soundEffects.click();
+        setIsTimerStarted(false);
+        setIsTimerComplete(false);
+        startTimeRef.current = 0;
+        setElapsedMs(0);
+        setTimerSec(0);
+        setCurrentScreen("article_select");
       };
 
       const handleAnswer = (optionIdx) => {
@@ -983,31 +1159,6 @@
         soundEffects.muted = next;
       };
 
-      // 브라우저 전체화면(Fullscreen API) 토글 (F11 앱 모드)
-      const toggleFullscreen = () => {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().then(() => {
-            setIsFullscreen(true);
-          }).catch(err => {
-            console.log("Fullscreen request error:", err);
-          });
-        } else {
-          if (document.exitFullscreen) {
-            document.exitFullscreen().then(() => {
-              setIsFullscreen(false);
-            });
-          }
-        }
-      };
-
-      useEffect(() => {
-        const handleFsChange = () => {
-          setIsFullscreen(!!document.fullscreenElement);
-        };
-        document.addEventListener("fullscreenchange", handleFsChange);
-        return () => document.removeEventListener("fullscreenchange", handleFsChange);
-      }, []);
-
       // 폰트 크기 매핑 (한 단계 축소하여 단정하고 편안한 본문 조판)
       const fontClasses = {
         sm: "text-base sm:text-[18px] text-slate-900 font-medium",
@@ -1015,7 +1166,26 @@
         lg: "text-[20px] sm:text-[22px] text-slate-900 font-medium"
       };
 
-      const progressPercent = Math.min(100, Math.round((timerSec / currentArticle.readingTimeSec) * 100));
+      const totalDurationMs = (currentArticle?.readingTimeSec || 15) * 1000;
+      // 독서 유도 애니메이션(하이라이트)은 시간 종료 1초 전에 100% 완독되도록 설정 (마지막 1초는 완독 상태 정리 및 버퍼)
+      const readingAnimDurationMs = Math.max(1000, totalDurationMs - 1000);
+
+      const totalChars = useMemo(() => {
+        if (!currentArticle || !currentArticle.paragraphs) return 0;
+        return currentArticle.paragraphs.reduce((sum, p) => sum + p.length, 0);
+      }, [currentArticle]);
+
+      let activeCharsTotal = 0;
+      if (!isTimerStarted) {
+        activeCharsTotal = 0;
+      } else if (isTimerComplete) {
+        activeCharsTotal = totalChars;
+      } else {
+        const ratio = Math.min(1, elapsedMs / readingAnimDurationMs);
+        activeCharsTotal = Math.round(ratio * totalChars);
+      }
+
+      const progressPercent = Math.min(100, Math.round((elapsedMs / readingAnimDurationMs) * 100));
       const remainingSec = Math.max(0, currentArticle.readingTimeSec - timerSec);
 
       return (
@@ -1058,7 +1228,7 @@
                   </div>
                 </div>
 
-                {/* 우측: 사운드 & 브라우저 F11 전체화면 & 뷰 모드 컨트롤 */}
+                {/* 우측: 사운드 & 뷰 모드 컨트롤 */}
                 <div class="flex items-center space-x-1.5 shrink-0 ml-2">
                   <button 
                     onClick={toggleSound}
@@ -1066,17 +1236,6 @@
                     title={isMuted ? "소리 켜기" : "소리 끄기"}
                   >
                     {isMuted ? "🔇" : "🔊"}
-                  </button>
-                  <button 
-                    onClick={toggleFullscreen}
-                    class={`px-2 py-1 rounded-lg border text-xs font-black transition shadow-sm flex items-center space-x-1 ${
-                      isFullscreen 
-                        ? "bg-amber-400 text-emerald-950 border-amber-300 ring-1 ring-amber-300" 
-                        : "bg-emerald-900/80 hover:bg-emerald-900 text-emerald-100 border border-emerald-500/70"
-                    }`}
-                    title="화면 전체를 앱으로 꽉 채우기 (F11 전체화면)"
-                  >
-                    <span>{isFullscreen ? "🗗 창모드" : "⛶ 전체화면"}</span>
                   </button>
                   <button 
                     onClick={() => setViewMode(viewMode === "mobile" ? "fullscreen" : "mobile")}
@@ -1090,192 +1249,359 @@
               </div>
             </div>
 
-            {/* 1줄 컴팩트 탭 바 (하단 구분선 진하게 강조) */}
-            <div class="px-2.5 py-1.5 bg-emerald-100/80 border-b-2 border-emerald-800 shadow-sm flex items-center justify-between gap-1.5 overflow-x-auto">
-              
-              {/* 좌측: 초/중/고/성인 */}
-              <div class="flex items-center bg-white/90 p-0.5 rounded-lg border border-emerald-300 shadow-sm shrink-0">
-                {[
-                  { key: "초등", icon: "🌱", label: "초" },
-                  { key: "중등", icon: "🌿", label: "중" },
-                  { key: "고등", icon: "🌳", label: "고" },
-                  { key: "성인", icon: "🎓", label: "성인" },
-                ].map(lvl => {
-                  const isSelected = selectedLevel === lvl.key;
-                  return (
-                    <button
-                      key={lvl.key}
-                      onClick={() => handleSelectLevelOrArticle(lvl.key, 0)}
-                      class={`px-2 py-1 rounded-md text-xs sm:text-sm font-black transition-all flex items-center space-x-0.5 ${
-                        isSelected
-                          ? "bg-emerald-700 text-white shadow-sm"
-                          : "text-emerald-900 hover:bg-emerald-50"
-                      }`}
-                    >
-                      <span class="text-xs sm:text-sm">{lvl.icon}</span>
-                      <span class="text-xs sm:text-sm font-black">{lvl.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* 우측: 지문 1, 지문 2, 지문 3 */}
-              <div class="flex items-center space-x-1 shrink-0">
-                {[0, 1, 2].map(idx => {
-                  const isSelected = articleIdx === idx;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => handleSelectLevelOrArticle(selectedLevel, idx)}
-                      class={`px-2.5 py-1 rounded-lg text-xs sm:text-sm font-black transition-all duration-150 flex items-center ${
-                        isSelected
-                          ? "bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400"
-                          : "bg-white text-emerald-900 border border-emerald-300 hover:bg-emerald-50"
-                      }`}
-                    >
-                      <span class="text-xs sm:text-sm font-black">지문 {idx + 1}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-            </div>
-
-            {/* 전환 애니메이션 영역 */}
-            <div key={switchKey} class="animate-content-switch">
-
-              {/* 3. [시간 및 퀴즈 도전하기] 슬림 박스 디자인으로 박스 높이 대폭 축소! */}
-              <div class="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-b from-emerald-50 to-teal-50/40 border-b-2 border-emerald-400/80">
-                {/* 상단 정독 타이머 라벨 & 시간 표시 (카운트다운: XX초) */}
-                <div class="flex justify-between items-center text-xs sm:text-sm font-black text-emerald-950 mb-1">
-                  <span class="flex items-center space-x-1">
-                    <span>⏱️ 뇌 집중 정독 타이머</span>
-                  </span>
-                  <span class={`font-black ${
-                    isTimerComplete 
-                      ? "text-emerald-700" 
-                      : remainingSec <= 5 
-                        ? "text-amber-600 animate-pulse" 
-                        : "text-teal-800"
-                  }`}>
-                    {remainingSec}초
-                  </span>
-                </div>
-
-                {/* ★ 배경 색이 타이머처럼 차오르는 액티브 버튼 박스 ★ */}
-                {isCompletedToday ? (
-                  <div class="w-full py-1.5 px-3 bg-emerald-100 border border-emerald-400 rounded-lg sm:rounded-xl flex items-center justify-between text-emerald-950 shadow-sm">
-                    <div class="flex items-center space-x-1.5">
-                      <span class="text-base sm:text-lg">🏆</span>
-                      <span class="font-black text-xs sm:text-sm text-emerald-900">문해력 퀴즈 완료!</span>
+            {/* ========== 1단계: 🏠 메인 홈 화면 (초/중/고/성인 레벨 선택) ========== */}
+            {currentScreen === "home" && (
+              <div class="p-3.5 sm:p-5 bg-gradient-to-b from-emerald-50/60 via-slate-50 to-white animate-content-switch">
+                <div>
+                  {/* 인트로 배너 */}
+                  <div class="bg-gradient-to-r from-emerald-800 via-teal-800 to-green-800 text-white p-4 sm:p-5 rounded-xl shadow-sm mb-4 text-center">
+                    <div class="flex justify-center mb-2.5">
+                      <span class="text-[11px] sm:text-xs font-black bg-amber-300 text-emerald-950 px-3 py-1 rounded-full shadow-xs inline-block">
+                        🔥 1일 3정독 챌린지
+                      </span>
                     </div>
-                    <button
-                      onClick={triggerConfetti}
-                      class="text-xs bg-emerald-700 hover:bg-emerald-800 text-white font-black px-2 py-0.5 rounded-md transition shadow"
-                    >
-                      폭죽 발사 🎉
-                    </button>
+                    <h2 class="text-base sm:text-lg md:text-xl font-black tracking-tight text-white mb-1.5">
+                      도파민 숏폼 대신 깊이 있는 텍스트 정독!
+                    </h2>
+                    <p class="text-xs sm:text-sm text-emerald-100 leading-relaxed font-medium">
+                      집중 읽기와 문해력 퀴즈로 뇌의 사고력을 길러보세요.
+                    </p>
                   </div>
-                ) : (
-                  <button
-                    disabled={!isTimerComplete}
-                    onClick={() => {
-                      soundEffects.click();
-                      setIsQuizOpen(true);
-                      setCurrentQuizStep(0);
-                      setSelectedOption(null);
-                      setQuizStatus("idle");
-                    }}
-                    class={`relative w-full py-1.5 sm:py-2 rounded-xl shadow-sm transition-all overflow-hidden border flex items-center justify-center ${
-                      isTimerComplete
-                        ? "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0 ring-2 ring-emerald-300 animate-pulse font-black"
-                        : `${currentTheme.buttonBg} text-slate-800 cursor-not-allowed ${currentTheme.buttonBorder}`
-                    }`}
-                  >
-                    {/* 타이머처럼 좌측에서 우측으로 점점 차오르는 배경 게이지 (Fill effect) */}
-                    {!isTimerComplete && (
-                      <div
-                        class={`absolute left-0 top-0 bottom-0 bg-gradient-to-r ${currentTheme.timerFill} border-r-2 ${currentTheme.timerBorder} transition-all duration-1000 ease-linear pointer-events-none`}
-                        style={{ width: `${progressPercent}%` }}
-                      />
-                    )}
 
-                    {/* 버튼 내부 텍스트 레이어 (z-10으로 게이지 위에 선명하게 표시) */}
-                    <div class="relative z-10 w-full flex items-center justify-center">
-                      {isTimerComplete ? (
-                        <div class="flex items-center justify-center space-x-1.5">
-                          <span class="text-base sm:text-lg">🚀</span>
-                          <span class="text-base sm:text-lg font-black text-amber-200">문해력</span>
-                          <span class="font-bold text-sm sm:text-base text-white">퀴즈 풀기</span>
-                          <span class="bg-white text-red-600 font-black text-sm sm:text-base px-2.5 py-0.5 rounded-full shadow-md ring-1 ring-red-300 ml-1">
-                            도전
+                  {/* 난이도 선택 안내 타이틀 */}
+                  <div class="flex items-center space-x-1.5 mb-3 px-0.5">
+                    <span class="text-base sm:text-lg">📚</span>
+                    <h3 class="text-sm sm:text-base font-black text-emerald-950">
+                      독서 난이도를 선택해 주세요
+                    </h3>
+                  </div>
+
+                  {/* 4단계 레벨 선택 박스 그리드 */}
+                  <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                    {LEVEL_CARDS.map(card => (
+                      <button
+                        key={card.key}
+                        onClick={() => handleSelectLevel(card.key)}
+                        class={`w-full py-5 sm:py-6 px-3 rounded-xl border-2 text-center transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 flex flex-col items-center justify-center space-y-1.5 ${card.accentBg} ${card.accentBorder}`}
+                      >
+                        <span class="text-3xl sm:text-4xl">{card.icon}</span>
+                        <div class="text-center">
+                          <span class={`block text-base sm:text-lg font-black tracking-tight ${card.textColor}`}>
+                            {card.title}
+                          </span>
+                          <span class="block text-xs sm:text-sm font-bold text-slate-500 mt-0.5">
+                            {card.timeLabel}
                           </span>
                         </div>
-                      ) : (
-                        <div class="w-full text-center flex items-center justify-center text-xs sm:text-sm font-extrabold text-slate-800 leading-normal">
-                          <span>아래 지문을 <span class="text-[15px] sm:text-[17px] font-black text-emerald-950 mx-0.5">집중</span>해서 읽어주세요 !!!</span>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                )}
-              </div>
-
-              {/* 4. 지문 본문 카드 영역 (여백 절반 축소 적용!) */}
-              <div class="px-1.5 py-1 sm:px-2.5 sm:py-1.5 bg-slate-100 flex flex-col justify-between">
-                <div>
-                  {/* 지문 메타 태그 & 폰트 크기 조절 바 */}
-                  <div class="flex items-center justify-between pb-1 border-b border-emerald-200">
-                    <span class={`text-xs sm:text-sm font-black border px-2 py-0.5 rounded-md shadow-xs ${currentTheme.tagClass}`}>
-                      {currentArticle.level} · {currentArticle.category}
-                    </span>
-
-                    <div class="flex items-center space-x-1 bg-white border border-emerald-300 rounded-lg p-0.5 shadow-sm">
-                      <button 
-                        onClick={() => setFontSize("sm")}
-                        class={`px-2 py-0.5 text-xs sm:text-sm rounded font-bold transition ${fontSize === "sm" ? "bg-emerald-700 text-white" : "text-emerald-900 hover:bg-emerald-100"}`}
-                      >
-                        가-
                       </button>
-                      <button 
-                        onClick={() => setFontSize("base")}
-                        class={`px-2 py-0.5 text-xs sm:text-sm rounded font-bold transition ${fontSize === "base" ? "bg-emerald-700 text-white" : "text-emerald-900 hover:bg-emerald-100"}`}
-                      >
-                        보통
-                      </button>
-                      <button 
-                        onClick={() => setFontSize("lg")}
-                        class={`px-2 py-0.5 text-xs sm:text-sm rounded font-bold transition ${fontSize === "lg" ? "bg-emerald-700 text-white" : "text-emerald-900 hover:bg-emerald-100"}`}
-                      >
-                        가+
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 지문 제목 (가운데 정렬 & 하단 강조 밑줄, 본문과의 간격 절반 축소) */}
-                  <div class="text-center mt-1 mb-0.5">
-                    <h2 class={`inline-block text-lg sm:text-xl md:text-2xl font-black text-emerald-950 tracking-tight leading-snug truncate max-w-full pb-0.5 border-b-2 ${currentTheme.titleUnderline}`}>
-                      {currentArticle.title}
-                    </h2>
-                  </div>
-
-                  {/* ★ 지문 본문 카드: 둥근 모서리 및 테두리 라인 제거, 깔끔한 플랫 파스텔 배경 ★ */}
-                  <div 
-                    style={{ backgroundColor: currentTheme.cardStyle.backgroundColor }}
-                    class="px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-none border-0 book-typography transition-all duration-300"
-                  >
-                    <div class={fontClasses[fontSize]}>
-                      {currentArticle.paragraphs.map((pText, pIdx) => (
-                        <p key={pIdx} class="book-paragraph text-justify">
-                          {pText}
-                        </p>
-                      ))}
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
+            )}
 
-            </div>
+            {/* ========== 2단계: 📋 지문 선택 화면 (선택된 난이도의 지문 1, 2, 3) ========== */}
+            {currentScreen === "article_select" && (
+              <div class={`p-3.5 sm:p-5 bg-gradient-to-b ${currentTheme.bgGradient} animate-content-switch`}>
+                <div>
+                  {/* 상단 네비게이션 서브 헤더 */}
+                  <div class={`flex items-center justify-between pb-2.5 mb-3.5 border-b ${currentTheme.navBorder}`}>
+                    <button
+                      onClick={handleGoBackToHome}
+                      class={`flex items-center space-x-1 px-3 py-1.5 rounded-lg ${currentTheme.backBtn} text-xs sm:text-sm font-black transition shadow-xs`}
+                    >
+                      <span>‹</span>
+                      <span>레벨 다시 선택</span>
+                    </button>
+
+                    <span class={`text-xs sm:text-sm font-black px-3 py-1.5 rounded-lg border shadow-xs ${currentTheme.tagClass}`}>
+                      {selectedLevel} 코스 챌린지
+                    </span>
+                  </div>
+
+                  {/* 안내 제목 */}
+                  <div class="mb-3.5 px-0.5">
+                    <h3 class={`text-base sm:text-lg font-black ${currentTheme.headingColor} tracking-tight flex items-center space-x-1.5`}>
+                      <span>📖</span>
+                      <span>도전할 지문을 선택해 주세요</span>
+                    </h3>
+                  </div>
+
+                  {/* 지문 3개 리스트 카드 */}
+                  <div class="space-y-3">
+                    {LEVEL_ARTICLES[selectedLevel].map((art, idx) => (
+                      <button
+                        key={art.id}
+                        onClick={() => handleSelectArticle(idx)}
+                        class={`w-full py-4 px-4 bg-white ${currentTheme.cardBorderHover} border-2 border-slate-200 rounded-xl text-left transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-3.5 group active:scale-[0.99]`}
+                      >
+                        <span class={`w-9 h-9 rounded-lg ${currentTheme.badgeNumber} font-black text-sm flex items-center justify-center shrink-0 shadow-xs`}>
+                          0{idx + 1}
+                        </span>
+                        <div class="min-w-0 flex-1">
+                          <h4 class={`text-sm sm:text-base font-black text-slate-900 ${currentTheme.titleHover} tracking-tight leading-snug truncate`}>
+                            {art.title}
+                          </h4>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ========== 3단계: 📖 지문 정독 & 퀴즈 챌린지 화면 ========== */}
+            {currentScreen === "reading" && (
+              <div key={switchKey} class="animate-content-switch">
+
+                {/* 상단 서브 네비게이션 (지문 목록으로, 홈으로) */}
+                <div class={`px-2.5 py-1.5 ${currentTheme.navSubBar} shadow-sm flex items-center justify-between gap-1.5`}>
+                  <button
+                    onClick={handleGoBackToArticles}
+                    class={`flex items-center space-x-1 px-2.5 py-1 rounded-md ${currentTheme.backBtn} text-xs sm:text-sm font-black transition shadow-xs`}
+                  >
+                    <span>‹</span>
+                    <span>지문 목록</span>
+                  </button>
+
+                  <div class="flex items-center space-x-1 font-black text-xs sm:text-sm">
+                    <span class={`px-2 py-0.5 rounded border shadow-xs ${currentTheme.tagClass}`}>
+                      {selectedLevel} · 지문 {articleIdx + 1}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={handleGoBackToHome}
+                    class={`px-2.5 py-1 rounded-md ${currentTheme.backBtn} text-xs sm:text-sm font-black transition shadow-xs flex items-center space-x-1`}
+                  >
+                    <span>🏠</span>
+                    <span>홈</span>
+                  </button>
+                </div>
+
+                {/* 3. 본문 박스 (타이머 일체형 & 중간 퀴즈도전 팝업) */}
+                <div class="relative bg-slate-100 flex flex-col justify-between overflow-hidden">
+                  {/* 본문 상단 타이머 프로그레스 게이지 바 (좌->우 차오름) */}
+                  <div class="h-1.5 w-full bg-slate-200 overflow-hidden">
+                    <div
+                      class={`h-full bg-gradient-to-r ${currentTheme.timerFill} transition-all duration-300 ease-linear`}
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+
+                  <div class="px-2.5 py-1.5 sm:px-3 sm:py-2">
+                    {/* 상단 '시작' 버튼 / 카운트다운 & 폰트 크기 조절 바 */}
+                    <div class="flex items-center justify-between pb-1.5 mb-1 border-b border-slate-200">
+                      {/* 좌측: 시작 버튼 또는 진행 타이머 카운트다운 */}
+                      <div class="flex items-center">
+                        {!isTimerStarted ? (
+                          <button
+                            onClick={handleStartTimer}
+                            class={`px-3.5 py-1 rounded-lg ${currentTheme.primaryBtn} active:scale-95 text-white text-xs sm:text-sm font-black transition shadow-xs flex items-center space-x-1.5 ring-2 animate-pulse`}
+                          >
+                            <span>▶</span>
+                            <span>시작</span>
+                          </button>
+                        ) : (
+                          <div class="flex items-center space-x-1.5">
+                            <div class={`flex items-center space-x-1.5 text-xs sm:text-sm font-black ${currentTheme.timerBadge} px-2.5 py-1 rounded-lg border shadow-2xs`}>
+                              <span class="text-sm">⏱️</span>
+                              <span>
+                                {isTimerComplete ? (
+                                  <span class="font-extrabold">정독 완료!</span>
+                                ) : (
+                                  <span>집중정독 : <span class={`font-black ${remainingSec <= 5 ? "text-red-600 animate-pulse" : "text-slate-900"}`}>{remainingSec}초</span></span>
+                                )}
+                              </span>
+                            </div>
+                            {isTimerComplete && !showChallengeBox && (
+                              <button
+                                onClick={handleRestartTimer}
+                                class="text-[11px] text-slate-500 hover:text-slate-800 font-bold underline px-1 py-0.5"
+                                title="처음부터 다시 정독하기"
+                              >
+                                ↺ 다시 읽기
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 우측: 폰트 크기 조절 버튼 그룹 */}
+                      <div class={`flex items-center space-x-1 bg-white border ${currentTheme.fontBoxBorder || "border-slate-300"} rounded-lg p-0.5 shadow-2xs`}>
+                        <button 
+                          onClick={() => setFontSize("sm")}
+                          class={`px-2 py-0.5 text-xs sm:text-sm rounded font-bold transition ${fontSize === "sm" ? currentTheme.activeFontBtn : currentTheme.inactiveFontBtn}`}
+                        >
+                          가-
+                        </button>
+                        <button 
+                          onClick={() => setFontSize("base")}
+                          class={`px-2 py-0.5 text-xs sm:text-sm rounded font-bold transition ${fontSize === "base" ? currentTheme.activeFontBtn : currentTheme.inactiveFontBtn}`}
+                        >
+                          보통
+                        </button>
+                        <button 
+                          onClick={() => setFontSize("lg")}
+                          class={`px-2 py-0.5 text-xs sm:text-sm rounded font-bold transition ${fontSize === "lg" ? currentTheme.activeFontBtn : currentTheme.inactiveFontBtn}`}
+                        >
+                          가+
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 지문 제목 (가운데 정렬 & 하단 강조 밑줄) */}
+                    <div class="text-center mt-1 mb-1">
+                      <h2 class={`inline-block text-lg sm:text-xl md:text-2xl font-black text-emerald-950 tracking-tight leading-snug truncate max-w-full pb-0.5 border-b-2 ${currentTheme.titleUnderline}`}>
+                        {currentArticle.title}
+                      </h2>
+                    </div>
+
+                    {/* 지문 본문 카드: 시작 버튼 클릭 시 시간에 따라 글자 읽는 순서대로(한 줄씩 좌->우, 위에서 아래로) 자연스럽게 채워지는 독서 유도 애니메이션 */}
+                    <div 
+                      class={`relative px-4 py-3.5 sm:px-5 sm:py-4 rounded-xl border ${currentTheme.readingBorder || "border-slate-200"} book-typography transition-all duration-300 min-h-[300px] bg-white/95 shadow-xs overflow-hidden`}
+                    >
+                      {/* 본문 텍스트 레이어 (줄 단위 좌->우, 위->아래 실시간 독서 가이드 페이서) */}
+                      <div class={`relative z-10 ${fontClasses[fontSize]}`}>
+                        {currentArticle.paragraphs.map((pText, pIdx) => {
+                          const charsBefore = currentArticle.paragraphs
+                            .slice(0, pIdx)
+                            .reduce((sum, p) => sum + p.length, 0);
+                          const paraLen = pText.length;
+                          
+                          let highlightedCount = 0;
+                          if (!isTimerStarted) {
+                            highlightedCount = 0;
+                          } else if (isTimerComplete) {
+                            highlightedCount = paraLen;
+                          } else {
+                            highlightedCount = Math.min(
+                              paraLen,
+                              Math.max(0, activeCharsTotal - charsBefore)
+                            );
+                          }
+                          
+                          const readPart = pText.slice(0, highlightedCount);
+                          const unreadPart = pText.slice(highlightedCount);
+
+                          return (
+                            <p key={pIdx} class="book-paragraph text-justify font-medium text-slate-800 leading-relaxed mb-3 last:mb-0">
+                              {highlightedCount > 0 && (
+                                <span class={`reading-highlight ${currentTheme.highlightClass}`}>
+                                  {readPart}
+                                </span>
+                              )}
+                              <span>{unreadPart}</span>
+                            </p>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ★ 시간이 다 지나면 본문 중간에 나타나는 문해력 퀴즈 풀기 도전 박스 ★ */}
+                  {isTimerComplete && !isCompletedToday && showChallengeBox && (
+                    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] z-20 flex items-center justify-center p-4 animate-in fade-in zoom-in duration-200">
+                      <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-2xl border-2 border-emerald-500 text-center max-w-xs w-full animate-bounce-subtle">
+                        <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-2.5 text-3xl shadow-inner">
+                          🎯
+                        </div>
+                        <h3 class="text-base sm:text-lg font-black text-slate-900 mb-1">
+                          정독 시간 완료!
+                        </h3>
+                        <p class="text-xs text-slate-600 mb-4 leading-relaxed font-medium">
+                          글을 집중해서 모두 정독하셨나요?<br />
+                          이제 3단계 문해력 퀴즈에 도전해 보세요!
+                        </p>
+                        <button
+                          onClick={() => {
+                            soundEffects.click();
+                            setIsQuizOpen(true);
+                            setCurrentQuizStep(0);
+                            setSelectedOption(null);
+                            setQuizStatus("idle");
+                          }}
+                          class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-sm sm:text-base rounded-xl shadow-lg ring-2 ring-emerald-300 transition-all flex items-center justify-center space-x-2"
+                        >
+                          <span>🚀</span>
+                          <span>문해력 퀴즈 풀기 도전!</span>
+                        </button>
+                        <button
+                          onClick={() => setShowChallengeBox(false)}
+                          class="mt-2.5 text-xs text-slate-500 hover:text-slate-800 font-bold underline"
+                        >
+                          지문 다시 확인하기
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 지문 다시 확인하기를 눌렀을 때 하단에 떠 있는 컴팩트 퀴즈 도전 바 */}
+                  {isTimerComplete && !isCompletedToday && !showChallengeBox && (
+                    <div class="p-2.5 bg-emerald-100 border-t-2 border-emerald-500 flex items-center justify-between shadow-md animate-in slide-in-from-bottom duration-200">
+                      <span class="text-xs font-black text-emerald-950 flex items-center space-x-1">
+                        <span>🎯</span>
+                        <span>정독 완료</span>
+                      </span>
+                      <button
+                        onClick={() => {
+                          soundEffects.click();
+                          setIsQuizOpen(true);
+                          setCurrentQuizStep(0);
+                          setSelectedOption(null);
+                          setQuizStatus("idle");
+                        }}
+                        class="py-1.5 px-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm rounded-lg shadow transition flex items-center space-x-1"
+                      >
+                        <span>🚀</span>
+                        <span>문해력 퀴즈 풀기 도전!</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* 퀴즈 3문제 완료 시 중간에 나타나는 완료 박스 */}
+                  {isCompletedToday && (
+                    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] z-20 flex items-center justify-center p-4 animate-in fade-in zoom-in duration-200">
+                      <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-2xl border-2 border-emerald-500 text-center max-w-xs w-full">
+                        <div class="w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-2.5 text-3xl shadow-inner">
+                          🏆
+                        </div>
+                        <h3 class="text-base sm:text-lg font-black text-emerald-900 mb-1">
+                          문해력 퀴즈 3문제 완료!
+                        </h3>
+                        <p class="text-xs text-slate-600 mb-4 font-medium">
+                          오늘의 정독 챌린지를 멋지게 달성했습니다!
+                        </p>
+                        <div class="space-y-2">
+                          <button
+                            onClick={triggerConfetti}
+                            class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-lg transition shadow flex items-center justify-center space-x-1"
+                          >
+                            <span>🎉</span>
+                            <span>폭죽 발사</span>
+                          </button>
+                          <button
+                            onClick={handleGoBackToArticles}
+                            class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-black text-xs sm:text-sm rounded-lg transition shadow flex items-center justify-center space-x-1"
+                          >
+                            <span>📋</span>
+                            <span>다른 지문 도전하기</span>
+                          </button>
+                          <button
+                            onClick={handleGoBackToHome}
+                            class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition border border-slate-300 flex items-center justify-center space-x-1"
+                          >
+                            <span>🏠</span>
+                            <span>홈으로</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
 
           </div>
 
