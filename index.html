@@ -1278,7 +1278,14 @@
         setCurrentScreen("article_select");
       };
 
+      // 퀴즈 문제 전환 또는 모달 개폐 시 보기 선택 및 상태 완전 초기화
+      useEffect(() => {
+        setSelectedOption(null);
+        setQuizStatus("idle");
+      }, [currentQuizStep, isQuizOpen]);
+
       const handleAnswer = (optionIdx) => {
+        if (quizStatus === "correct") return;
         setSelectedOption(optionIdx);
         const activeQuiz = currentArticle.quiz[currentQuizStep];
 
@@ -1286,17 +1293,17 @@
           setQuizStatus("correct");
           soundEffects.correct();
           setTimeout(() => {
+            setSelectedOption(null);
+            setQuizStatus("idle");
             if (currentQuizStep + 1 < currentArticle.quiz.length) {
               setCurrentQuizStep(prev => prev + 1);
-              setSelectedOption(null);
-              setQuizStatus("idle");
             } else {
               setIsQuizOpen(false);
               setIsCompletedToday(true);
               soundEffects.celebrate();
               triggerConfetti();
             }
-          }, 1000);
+          }, 900);
         } else {
           setQuizStatus("wrong");
           soundEffects.wrong();
@@ -1815,24 +1822,27 @@
                 <div class="space-y-2.5">
                   {currentArticle.quiz[currentQuizStep].options.map((opt, oIdx) => {
                     const isSelected = selectedOption === oIdx;
-                    let btnClass = "border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 text-slate-800";
+                    let btnClass = "border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-800 shadow-xs";
+                    let badgeClass = "bg-slate-200 text-slate-700";
 
                     if (isSelected) {
                       if (quizStatus === "correct") {
                         btnClass = "border-emerald-500 bg-emerald-100 text-emerald-950 font-black ring-2 ring-emerald-400";
+                        badgeClass = "bg-emerald-600 text-white";
                       } else if (quizStatus === "wrong") {
                         btnClass = "border-rose-500 bg-rose-100 text-rose-950 font-black ring-2 ring-rose-400";
+                        badgeClass = "bg-rose-600 text-white";
                       }
                     }
 
                     return (
                       <button
-                        key={oIdx}
+                        key={`quiz-step-${currentQuizStep}-opt-${oIdx}`}
                         disabled={quizStatus === "correct"}
                         onClick={() => handleAnswer(oIdx)}
                         class={`w-full text-left p-3 sm:p-3.5 rounded-xl border text-base sm:text-lg font-semibold transition-all flex items-start space-x-2.5 book-typography ${btnClass}`}
                       >
-                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-800 text-white text-xs sm:text-sm font-bold shrink-0 mt-0.5">
+                        <span class={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs sm:text-sm font-bold shrink-0 mt-0.5 transition-colors ${badgeClass}`}>
                           {oIdx + 1}
                         </span>
                         <span class="leading-relaxed">{opt}</span>
@@ -1870,7 +1880,12 @@
                   {currentArticle.quiz[currentQuizStep].hint}
                 </p>
                 <button
-                  onClick={() => { soundEffects.click(); setShowHintModal(false); }}
+                  onClick={() => {
+                    soundEffects.click();
+                    setShowHintModal(false);
+                    setSelectedOption(null);
+                    setQuizStatus("idle");
+                  }}
                   class="w-full mt-3 py-2 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl text-sm sm:text-base transition shadow-md"
                 >
                   다시 풀어보기
