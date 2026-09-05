@@ -2,8 +2,18 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>쇼츠 말고 숏글 | 대전둔산여자고등학교 권다인</title>
+  
+  <!-- PWA & 모바일 웹앱 전체화면 설정 -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#065f46" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="쇼츠말고숏글" />
+  <link rel="apple-touch-icon" href="dunsan_logo.png" />
+  <link rel="icon" type="image/png" href="dunsan_logo.png" />
   
   <!-- Pretendard Font -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -41,12 +51,18 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
-    body {
-      font-family: 'Pretendard', sans-serif;
-      background: #04140d;
-      color: #0f172a;
+    html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background: #022c22;
+      color: #0f172a;
       -webkit-font-smoothing: antialiased;
     }
     .app-title-shadow {
@@ -94,9 +110,9 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-start p-1 sm:p-4 bg-slate-950">
+<body class="min-h-screen w-full flex flex-col items-center justify-start p-0 bg-slate-900">
 
-  <div id="root" class="w-full max-w-4xl py-0.5 sm:py-1"></div>
+  <div id="root" class="w-full min-h-screen max-w-4xl flex flex-col items-center justify-start p-0"></div>
 
   <script type="text/babel">
     const { useState, useEffect } = React;
@@ -864,6 +880,7 @@
 
     function App() {
       const [viewMode, setViewMode] = useState("mobile");
+      const [isFullscreen, setIsFullscreen] = useState(false);
       const [isMuted, setIsMuted] = useState(false);
       
       const [selectedLevel, setSelectedLevel] = useState("고등");
@@ -966,6 +983,31 @@
         soundEffects.muted = next;
       };
 
+      // 브라우저 전체화면(Fullscreen API) 토글 (F11 앱 모드)
+      const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().then(() => {
+            setIsFullscreen(true);
+          }).catch(err => {
+            console.log("Fullscreen request error:", err);
+          });
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().then(() => {
+              setIsFullscreen(false);
+            });
+          }
+        }
+      };
+
+      useEffect(() => {
+        const handleFsChange = () => {
+          setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener("fullscreenchange", handleFsChange);
+        return () => document.removeEventListener("fullscreenchange", handleFsChange);
+      }, []);
+
       // 폰트 크기 매핑 (한 단계 축소하여 단정하고 편안한 본문 조판)
       const fontClasses = {
         sm: "text-base sm:text-[18px] text-slate-900 font-medium",
@@ -977,13 +1019,13 @@
       const remainingSec = Math.max(0, currentArticle.readingTimeSec - timerSec);
 
       return (
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center w-full min-h-screen sm:min-h-0">
 
-          {/* 메인 컨테이너 */}
-          <div class={`w-full bg-white transition-all duration-300 ${
+          {/* 메인 컨테이너 (둥근 모서리와 외곽 테두리 라인을 완전히 제거한 플랫 직사각형 앱) */}
+          <div class={`w-full bg-white transition-all duration-300 rounded-none border-0 ${
             viewMode === "mobile" 
-              ? "max-w-md rounded-[28px] shadow-2xl border-2 border-emerald-800/80 overflow-hidden relative" 
-              : "max-w-3xl rounded-2xl shadow-2xl border-2 border-emerald-800/80 overflow-hidden"
+              ? "min-h-screen sm:min-h-0 sm:max-w-md shadow-xl overflow-hidden relative" 
+              : "min-h-screen sm:min-h-0 max-w-4xl shadow-xl overflow-hidden relative"
           }`}>
 
             {/* 통합 헤더: 여백 축소 & 컴팩트화 */}
@@ -1016,7 +1058,7 @@
                   </div>
                 </div>
 
-                {/* 우측: 사운드 & 뷰 모드 컨트롤 */}
+                {/* 우측: 사운드 & 브라우저 F11 전체화면 & 뷰 모드 컨트롤 */}
                 <div class="flex items-center space-x-1.5 shrink-0 ml-2">
                   <button 
                     onClick={toggleSound}
@@ -1026,8 +1068,20 @@
                     {isMuted ? "🔇" : "🔊"}
                   </button>
                   <button 
+                    onClick={toggleFullscreen}
+                    class={`px-2 py-1 rounded-lg border text-xs font-black transition shadow-sm flex items-center space-x-1 ${
+                      isFullscreen 
+                        ? "bg-amber-400 text-emerald-950 border-amber-300 ring-1 ring-amber-300" 
+                        : "bg-emerald-900/80 hover:bg-emerald-900 text-emerald-100 border border-emerald-500/70"
+                    }`}
+                    title="화면 전체를 앱으로 꽉 채우기 (F11 전체화면)"
+                  >
+                    <span>{isFullscreen ? "🗗 창모드" : "⛶ 전체화면"}</span>
+                  </button>
+                  <button 
                     onClick={() => setViewMode(viewMode === "mobile" ? "fullscreen" : "mobile")}
                     class="px-2 py-1 rounded-lg bg-emerald-900/80 hover:bg-emerald-900 text-emerald-100 border border-emerald-500/70 text-xs font-bold transition shadow-sm whitespace-nowrap"
+                    title="모바일 폰 크기 또는 넓은 화면으로 전환"
                   >
                     {viewMode === "mobile" ? "🖥️ 넓게" : "📱 폰뷰"}
                   </button>
@@ -1205,10 +1259,10 @@
                     </h2>
                   </div>
 
-                  {/* ★ 지문 본문 카드: 학년별 파스텔톤 배경색 & 위아래/좌우 여백 지금보다 절반으로 축소! ★ */}
+                  {/* ★ 지문 본문 카드: 둥근 모서리 및 테두리 라인 제거, 깔끔한 플랫 파스텔 배경 ★ */}
                   <div 
-                    style={currentTheme.cardStyle}
-                    class="px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl shadow-sm border-2 book-typography transition-all duration-300"
+                    style={{ backgroundColor: currentTheme.cardStyle.backgroundColor }}
+                    class="px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-none border-0 book-typography transition-all duration-300"
                   >
                     <div class={fontClasses[fontSize]}>
                       {currentArticle.paragraphs.map((pText, pIdx) => (
